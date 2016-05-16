@@ -76,8 +76,8 @@
       if (hasABRSource(video) && canPlay('application/x-mpegurl') || api.conf.swfHls) {
         selector.appendChild(common.createElement('li', {'data-quality': 'abr', 'class': quality === 'abr' ? 'active' : ''}, 'Auto'));
       }
-      api.qualities.forEach(function(q) {
-        selector.appendChild(common.createElement('li', {'data-quality': q, 'class': q == quality ? 'active': ''}, q));
+      Object.keys(api.qualities).forEach(function (key) {
+        selector.appendChild(common.createElement('li', {'data-quality': key, 'class': key == quality ? 'active': ''}, key));
       });
 
     }).on('unload', function() {
@@ -117,13 +117,15 @@
     function findOptimalQuality(previousQuality, newQualities) {
       if (previousQuality === 'abr') return 'abr';
       var a = parseInt(previousQuality, 0), ret;
-      newQualities.forEach(function(quality, i) {
-        if (i == newQualities.length - 1 && !ret) { // The best we can do
-          ret = quality;
+      Object.keys(newQualities).forEach(function (key, i) {
+        if (i == Object.keys(newQualities).length - 1 && !ret) { // The best we can do
+          ret = key;
         }
-        if (parseInt(quality) <= a && parseInt(newQualities[i+1]) > a) { // Is between
-          ret = quality;
+        if (parseInt(key) <= a && parseInt(Object.keys(newQualities)[i+1]) > a) {
+          ret = key;
         }
+
+        ret = newQualities[key];
       });
       return ret;
     }
@@ -142,9 +144,7 @@
         if (quality === 'abr' || (clean && isDefaultQuality) || /mpegurl/i.test(src.type)) return src;
         var n = {
           type: src.type,
-          src: src.src.replace(re, currentQuality === api.defaultQuality ?
-                               '$1-' + quality + '$2' :
-                                 isDefaultQuality ? '$2' : '-' + quality + '$2')
+          src: api.qualities[quality]
         };
         if (n.src !== src.src) changed = true;
         return n;
@@ -161,9 +161,7 @@
         sources: newSources
       });
 
-
       return changed ? clip : false;
     }
-
   });
 })(typeof module === 'object' && module.exports ? require('flowplayer') : window.flowplayer);
